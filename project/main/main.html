@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Main HTML</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      display: flex;
+      justify-content: center;
+    }
+
+    #start:hover,
+    #help:hover,
+    #exit:hover,
+    #back:hover {
+      scale: 1.1;
+    }
+  </style>
+
+  <script src="./ImgObject.js"></script>
+  <script>
+    let stage;
+    let helpBox;
+
+    function createMainScreen() {
+      stage = document.createElement("div");
+      stage.style.position = "absolute";
+      stage.style.overflow = "hidden";
+      stage.style.width = screen.width * 0.7 + "px";
+      stage.style.height = screen.height * 0.87 + "px";
+      stage.style.border = "1px solid black";
+      stage.style.backgroundImage = "url(../images/space.png)";
+      stage.style.backgroundSize = "cover";
+      stage.style.opacity = "0.9";
+      stage.style.display = "flex";
+      stage.style.alignItems = "center";
+      stage.style.justifyContent = "center";
+
+      let topImg = new ImgObject(stage, "../images/mainlogo2.png", 75, 25, 5, "top");
+      let startImg = new ImgObject(stage, "../images/start.png", 40, 10, 55, "start");
+      let helpImg = new ImgObject(stage, "../images/help.png", 15, 10, 70, "help");
+      let exitImg = new ImgObject(stage, "../images/exit.png", 15, 10, 85, "exit");
+
+      document.body.appendChild(stage);
+    }
+
+    function createHelp() {
+      helpBox = document.createElement("div");
+      helpBox.style.position = "absolute";
+      helpBox.style.width = screen.width * 0.7 + "px";
+      helpBox.style.height = screen.height * 0.87 + "px";
+      helpBox.style.border = "1px solid black";
+      helpBox.style.backgroundImage = "url(../images/help2.png)";
+      helpBox.style.backgroundSize = "cover";
+      helpBox.style.display = "none";
+      helpBox.id = "helpBox";
+
+      let back = new ImgObject(helpBox, "../images/back.png", 10, 5, 0, "back")
+
+      document.body.appendChild(helpBox);
+    }
+
+    function showHelp() {
+      helpBox.style.display = "block";
+    }
+
+    function backHelp() {
+      helpBox.style.display = "none";
+    }
+
+    function windowClose() {
+      window.open('', '_self').close();
+    }
+
+    function gameStart() {
+      let openGame = '../indexmain.html';
+
+      window.location = openGame;
+    }
+
+
+    function init() {
+      createMainScreen();
+      createHelp();
+
+      document.getElementById("start").addEventListener("click", function () {
+        gameStart();
+      });
+      document.getElementById("help").addEventListener("click", function () {
+        showHelp();
+      });
+      document.getElementById("exit").addEventListener("click", function () {
+        windowClose();
+      });
+      document.getElementById("back").addEventListener("click", function () {
+        backHelp();
+      });
+    }
+
+    window.onload = function () {
+      init();
+    }
+  </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

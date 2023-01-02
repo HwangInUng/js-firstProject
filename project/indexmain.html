@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MARVEL SURVIVAL</title>
+    <link rel="stylesheet" type="text/css" href="./style.css">
+</head>
+<script src="./classes/util.js"></script>
+<script src="./main/ImgObject.js"></script>
+<script src="./classes/GameObject.js"></script>
+<script src="./classes/GameDiv.js"></script>
+<script src="./classes/Input.js"></script>
+<script src="./classes/TheEnd.js"></script>
+<script src="./classes/Wrapper.js"></script>
+<script src="./classes/ScoreBoard.js"></script>
+<script src="./classes/ScoreUnit.js"></script>
+<script src="./classes/Stage.js"></script>
+<script src="./classes/Hero.js"></script>
+<script src="./classes/Enemy.js"></script>
+<script src="./classes/Bullet.js"></script>
+<script src="./classes/HpItem.js"></script>
+<script src="./classes/Boss.js"></script>
+
+<script>
+    //배경 및 초기사용 변수
+    let wrapper;
+    let scoreBoard;
+    let stage;
+    let stageWidth;
+    let stageHeight;
+    let gameOver;
+    let phaseUp;
+    let bulletSt;  //bullet 추가 생성 setTimeOut()
+    let enemySt;  //enemy 생성 setTimeOut()
+    let bossSt;   //boss 생성 setTimOut()
+
+    //게임논리값 변수
+    let upFlag = false;
+    let downFlag = false;
+    let leftFlag = false;
+    let rightFlag = false;
+    let totalScore = 0; //게임점수
+    let gameFlag = false;
+    let gamePhase = 1;
+    let gameSecond = 0;
+
+    //hero 관련 변수
+    let hero;
+    let heroSize = 80;
+    let heroHp = 1000;
+    let heroSpeed = 2.5;
+    let hpItemArray = [];
+
+    //bullet 관련 변수
+    let bulletArray = [];
+    let bulletSize = 25;
+    let bulletSpeed = 3;
+
+
+    //enemy 관련 변수
+    let enemyArray = [];
+    let enemySize = 60;
+    let enemySpeed = 0.4;
+    let enemyHp = 50;
+    let enemyNum = 0;
+    let boss;
+    let bossHp = 1500000;
+
+    //동적으로 생성된 인스턴스에는 멤버변수가 존재하기 때문에 멤버변수까지 지정해서 요소를 삭제해야함.
+
+    function createWrapper() {  //전체 영역에 대한 div 생성
+        wrapper = new Wrapper(document.body, "absolute", screen.width * 0.9, screen.height * 0.85, "");
+    }
+
+    function createScoreboard() {  //스코어 등 세부 수치를 표현할 div 생성
+        scoreBoard = new ScoreBoard(wrapper.div, "relative", wrapper.width * 0.2, wrapper.height, "1px solid black");
+
+        //value 값을 전달하기 위하여 input 요소에 id지정
+        let score = new ScoreUnit(scoreBoard.div, "relative", 50, 10, "", "score.png")
+        let scoreInput = new Input(scoreBoard.div, 100, 10, "relative", "scoreInput");
+        let currentHp = new ScoreUnit(scoreBoard.div, "relative", 80, 10, "", "currenthp.png")
+        let hpInput = new Input(scoreBoard.div, 100, 10, "relative", "hpInput");
+        let phaseStep = new ScoreUnit(scoreBoard.div, "relative", 80, 10, "", "phasestep.png")
+        let phaseInput = new Input(scoreBoard.div, 100, 10, "relative", "phaseInput");
+    }
+
+    function createStage() { //게임스테이지 생성
+        stage = new Stage(wrapper.div, "relative", wrapper.width * 0.8, wrapper.height, "1px soild black");
+
+        //주인공, 적 등 인스턴스 배치를 위한 변수화
+        stageWidth = parseInt(stage.width);
+        stageHeight = parseInt(stage.height);
+    }
+
+    function createHero() { //주인공 생성 함수
+        hero = new Hero(stage.div, "ironman.png", (stageWidth / 2) - 25, (stageHeight / 2) - 25, heroSize, heroSize, 0, 0, heroHp);
+    }
+
+    function createEnemy() {  //적 생성 함수
+        if (gameFlag) {
+            let enemy;
+            enemyNum++;  //몬스터 생성 숫자 증가 카운터
+
+            //위치별 매개변수(container, src, x, y, width, height, velX, velY, hp)
+            if (enemyNum % 2 == 0 && gamePhase < 10) {
+                enemy = new Enemy(stage.div, "small.png", getRandomRange(-100, stageWidth + 100), getRandomRange(-100, -200), enemySize, enemySize, enemySpeed + (gamePhase / 10), enemySpeed + (gamePhase / 10), enemyHp * (gamePhase / 2));
+            } else if (gamePhase > 2 && enemyNum % 25 == 0 && gamePhase < 10) {
+                enemy = new Enemy(stage.div, "groot.png", getRandomRange(-100, stageWidth + 100), getRandomRange(-100, -200), enemySize * 2.5, enemySize * 2.5, (enemySpeed + 0.5) + (gamePhase / 10), (enemySpeed + 0.5) + (gamePhase / 10), (enemyHp * 10) * (gamePhase / 2));
+            } else if (gamePhase > 4 && enemyNum % 45 == 0 && gamePhase < 10) {
+                enemy = new Enemy(stage.div, "ultron.png", getRandomRange(-100, stageWidth + 100), getRandomRange(stageHeight + 100, stageHeight + 200), enemySize * 3, enemySize * 3, (enemySpeed + 0.5) + (gamePhase / 10), (enemySpeed + 0.5) + (gamePhase / 10), (enemyHp * 50) * (gamePhase / 2));
+            } else if (gamePhase > 6 && enemyNum % 85 == 0 && gamePhase < 10) {
+                enemy = new Enemy(stage.div, "thanos.png", getRandomRange(-100, stageWidth + 100), getRandomRange(-100, -200), enemySize * 3.5, enemySize * 3.5, (enemySpeed + 0.3) + (gamePhase / 10), (enemySpeed + 0.3) + (gamePhase / 10), (enemyHp * 150) * (gamePhase / 2));
+            } else if (enemyNum > 0 && gamePhase < 10) {  //홀수는 stage 하단에서 생성
+                enemy = new Enemy(stage.div, "small.png", getRandomRange(-100, stageWidth + 100), getRandomRange(stageHeight + 100, stageHeight + 200), enemySize, enemySize, enemySpeed + (gamePhase / 10), enemySpeed + (gamePhase / 10), enemyHp * (gamePhase / 2));
+            }
+            enemyArray.push(enemy);
+        }
+        enemySt = setTimeout("createEnemy()", 100);
+
+        if (gamePhase == 10) {
+            clearTimeout(enemySt);
+        }
+    }
+
+    function createBoss() {
+        if (gameFlag) {
+            if (gamePhase == 10) {
+                boss = new Boss(stage.div, "ma.png", getRandomRange(-100, stageWidth + 100), getRandomRange(-100, -200), enemySize * 6, enemySize * 6, enemySpeed + 0.3, enemySpeed + 0.3, bossHp);
+            }
+        }
+        bossSt = setTimeout("createBoss()", 100);
+
+        if (boss != undefined) {
+            clearTimeout(bossSt);
+        }
+    }
+
+    function createBullet() { //hero를 기준으로 원을 그리며 이동하는 총알 생성
+        let bullet = new Bullet(stage.div, "arc.png", getRadiansX(130, 0, hero.x + 20), getRadiansY(130, 0, hero.y + 20), bulletSize, bulletSize, bulletSpeed, bulletSpeed);
+
+        bulletArray.push(bullet);
+    }
+
+    function addBullet() { //일정 시간 뒤에 총알 추가생성
+        if (gameFlag) {
+            gameSecond++;
+            if (gameSecond % 25 == 0) {
+                let bullet = new Bullet(stage.div, "arc.png", getRadiansX(110, gameSecond + 200, hero.x + 25), getRadiansY(110, gameSecond + 60, hero.y + 25), bulletSize, bulletSize, bulletSpeed, bulletSpeed);
+
+                bulletArray.push(bullet);
+                createHpItem();
+            }
+            console.log(gameSecond);
+        }
+        bulletSt = setTimeout("addBullet()", 1000);
+
+        if (bulletArray.length > 2 + gamePhase || hero.hp == 0) {
+            clearTimeout(bulletSt);
+        }
+    }
+
+    function createHpItem() {
+        let hpItem = new HpItem(stage.div, "hp.png", getRandomRange(50, stageWidth - 50), getRandomRange(50, stageHeight - 50), 50, 50, 0, 0);
+        hpItemArray.push(hpItem);
+    }
+
+    function getPhaseup() {
+        phaseUp = new TheEnd(stage.div, "./images/phaseup.png", 60, 20, "", "phaseUp");
+    }
+
+    function getGameover() {
+        gameOver = new TheEnd(stage.div, "./images/gameover2.png", 80, 20, "", "end");
+        overText = new TheEnd(stage.div, "./images/gameovertext.png", 90, 10, "", "endtext");
+    }
+
+    function keyDown(e) {
+        switch (e.keyCode) {
+            case 37: leftFlag = true; break;
+            case 39: rightFlag = true; break;
+            case 38: upFlag = true; break;
+            case 40: downFlag = true; break;
+        }
+    }
+
+    function keyUp(e) {
+        switch (e.keyCode) {
+            case 37: leftFlag = false; break;
+            case 39: rightFlag = false; break;
+            case 38: upFlag = false; break;
+            case 40: downFlag = false; break;
+            case 32:
+                gameFlag = true;
+                if (phaseUp != undefined) {
+                    stage.div.removeChild(stage.div.children.phaseUp);
+                }
+                break;
+        }
+    }
+
+    function gameLoop() {
+        if (gameFlag) {
+            hero.tick();
+            hero.render();
+
+            for (let i = 0; i < bulletArray.length; i++) {
+                bulletArray[i].tick();
+                bulletArray[i].render();
+            }
+            for (let i = 0; i < enemyArray.length; i++) {
+                enemyArray[i].tick();
+                enemyArray[i].render();
+            }
+
+            if (boss != undefined) {
+                boss.tick();
+                boss.render();
+            }
+        }
+        setTimeout("gameLoop()", 10);
+    }
+
+    function getMain(e) {
+        if (e.keyCode == 82 && gameOver != undefined) {
+            let openGame = './main/main.html';
+            window.location = openGame;
+        }
+    }
+
+
+    function init() {
+        createWrapper();
+        createScoreboard();
+        createStage();
+        createHero();
+        createBullet();
+        createEnemy();
+        createBoss();
+
+        document.body.addEventListener("keydown", keyDown);
+        document.body.addEventListener("keyup", keyUp);
+
+        gameLoop();
+        addBullet();
+
+        document.body.addEventListener("keyup", function (e) {
+            getMain(e);
+        });
+    }
+
+    window.addEventListener("load", function () {
+        init();
+    });
+</script>
+
+<body>
+</body>
+
+</html>
